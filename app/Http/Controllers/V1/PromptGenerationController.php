@@ -1,9 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\V1;
 
+use App\Http\Controllers\V1\Controller;
 use Illuminate\Http\Request;
 use App\Http\Requests\GeneratePromptRequest;
+use App\Http\Resources\ImageGenerationResource;
 use Illuminate\Support\Str;
 use App\Services\OpenAiService;
 use OpenAI\Exceptions\RateLimitException;
@@ -11,7 +13,7 @@ use OpenAI\Exceptions\ErrorException;
 use OpenAI\Exceptions\TransporterException;
 use Exception;
 
-class ImageGenerationController extends Controller
+class PromptGenerationController extends Controller
 {
 
     public function __construct(private OpenAiService $openAiService){
@@ -20,15 +22,19 @@ class ImageGenerationController extends Controller
 
     public function index()
     {
-
+        $user = request()->user();
+        $imageGenerations = $user->imageGenerations()->latest()->paginate(10);
+        return ImageGenerationResource::collection($imageGenerations);
     }
 
-    public function store(Request $request)
+    public function store(GeneratePromptRequest $request)
     {
         try {
             $user = $request->user();
 
+            // Validate the request
             $image = $request->file('image');
+
 
             $originalFileName = $image->getClientOriginalName();
             // Remove any special characters from the file name for eg: "Hello World.png" to "Hello_World.png"
@@ -49,7 +55,7 @@ class ImageGenerationController extends Controller
                 'mime_type' => $image->getClientMimeType(),
             ]);
 
-            return response()->json($imageGeneration, 201);
+            return new ImageGenerationResource($imageGeneration);
             
         } catch (RateLimitException $e) {
             return response()->json([

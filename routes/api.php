@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\ImageGenerationController;
+use App\Http\Controllers\V1\PromptGenerationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -11,7 +11,7 @@ Route::get('/user', function (Request $request) {
 
 // Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('v1')->group(function () {
-        Route::apiResource('image-generations', ImageGenerationController::class)
+        Route::apiResource('prompt-generations', PromptGenerationController::class)
             ->only(['index','store']);
     });
 // });
