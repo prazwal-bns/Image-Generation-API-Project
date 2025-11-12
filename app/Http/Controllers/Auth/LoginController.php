@@ -34,11 +34,8 @@ class LoginController extends Controller
     {
         $user = $request->user();
         $user->currentAccessToken()->delete();
-
-        // $request->session()->regenerateToken();
-
         return response()->json([
-            'message' => 'User logged out successfully',
+            'message' => 'User Logged out successfully'
         ]);
     }
 }
