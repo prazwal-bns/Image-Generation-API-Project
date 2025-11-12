@@ -22,5 +22,10 @@ class DatabaseSeeder extends Seeder
             'email' => 'testuser1@gmail.com',
             'password' => 'password123'
         ]);
+
+        $this->call([
+            ImageGenerationSeeder::class,
+        ]);
+        
     }
 }
