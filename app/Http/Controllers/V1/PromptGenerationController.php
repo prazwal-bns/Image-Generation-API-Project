@@ -41,6 +41,30 @@ class PromptGenerationController extends Controller
                 $query->where('generated_prompt', 'like', '%' . $request->get('search') . '%');
             }
 
+            // Apply Sorting: http://127.0.0.1:8000/api/v1/prompt-generations?per_page=25&sort=created_at&order=desc
+            $allowedSortFields = ['created_at', 'updated_at','generated_prompt'];
+            $sortField = 'created_at';
+            $sortDirection = 'desc';
+
+            if($request->has('sort') && !empty($request->get('sort'))){
+                $sort = $request->sort;
+                if (str_starts_with($sort, '-')){
+                    $sortField = substr($sort, 1);
+                    $sortDirection = 'desc';
+                } else {
+                    $sortField = $sort;
+                    $sortDirection = 'asc';
+                }
+            }
+
+            if(!in_array($sortField, $allowedSortFields)){
+                $sortField = 'created_at';
+                $sortDirection = 'desc';
+            }
+
+            $query->orderBy($sortField, $sortDirection);
+
+
             // for gettting specific page with per page and page number: http://127.0.0.1:8000/api/v1/prompt-generations?per_page=25&page=2
             $imageGenerations = $query->latest()->paginate($request->get('per_page'));
 
