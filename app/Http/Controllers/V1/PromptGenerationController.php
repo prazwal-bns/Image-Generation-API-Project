@@ -30,24 +30,23 @@ class PromptGenerationController extends Controller
      * @return \Illuminate\Http\JsonResponse
      * @authenticated
      */
-    public function index()
+    public function index(Request $request)
     {
         if(Auth::check()){
             $user = request()->user();
+            $query = $user->imageGenerations();
 
-            $imageGenerations = $user->imageGenerations()->latest()->paginate(10);
-    
-            // $imageGenerations = [
-            //     'id' => 1,
-            //     'image_url' => 'https://via.placeholder.com/150',
-            //     'generated_prompt' => 'A beautiful sunset over a calm ocean',
-            //     'original_file_name' => 'sunset.jpg',
-            //     'file_size' => 1000,
-            //     'mime_type' => 'image/jpeg',
-            //     'created_at' => now(),
-            //     'updated_at' => now(),
-            // ];
-            // return response()->json($imageGenerations);
+            // for searching any field the generated prompt
+            if($request->has('search') && !empty($request->get('search'))){
+                $query->where('generated_prompt', 'like', '%' . $request->get('search') . '%');
+            }
+
+            // for gettting specific page with per page and page number: http://127.0.0.1:8000/api/v1/prompt-generations?per_page=25&page=2
+            // $imageGenerations = $query->latest()->paginate($request->get('per_page'));
+
+
+            // for getting specific page: http://127.0.0.1:8000/api/v1/prompt-generations?page=3
+            $imageGenerations = $query->latest()->paginate(10);
     
             return ImageGenerationResource::collection($imageGenerations);
         } else {
