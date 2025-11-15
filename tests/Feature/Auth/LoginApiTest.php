@@ -140,4 +140,18 @@ test('login works after rate limit expires',function(){
 
     expect($response->json('token'))->not->toBeEmpty();
     $this->assertAuthenticated();
+});
+
+
+test('login endpoint requires guest middleware',function(){
+    $user = User::factory()->create();
+    
+    $response = $this->actingAs($user, 'sanctum')
+    ->postJson('/api/login',[
+        'email' => 'user1test@gmail.com',
+        'password' => 'password'
+    ]);
+
+    // this should redirect or return 302/401 depending on middleware configuration
+    $response->assertStatus(302);
 })->only();
