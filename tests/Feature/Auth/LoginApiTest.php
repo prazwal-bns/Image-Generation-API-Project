@@ -1,6 +1,14 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
+
+beforeEach(function(){
+    $throttleKey = Str::transliterate(Str::lower('user1test@gmail.com' . '|' . '127.0.0.1'));
+
+    RateLimiter::clear($throttleKey);
+});
 
 test('users can login with valid credentials via api.', function () {
     $user = User::factory()->create([
@@ -39,7 +47,7 @@ test('users cannot login with invalid credentials via api.', function () {
     ]);
 
     $response = $this->postJson('/api/login', [
-        'email' => 'rambahdurtest@gmail.com',
+        'email' => 'wronguser@gmail.com',
         'password' => 'password'
     ]);
 
@@ -57,7 +65,7 @@ test('login requires valid email format.', function () {
     ]);
 
     $response = $this->postJson('/api/login', [
-        'email' => 'aforapple.com',
+        'email' => 'user1test.com',
         'password' => 'password'
     ]);
 
@@ -65,4 +73,28 @@ test('login requires valid email format.', function () {
         ->assertJsonValidationErrors(['email']);
 
     $this->assertGuest();
+});
+
+test('login is rate limited after too many attempts',function(){
+    $user = User::factory()->create([
+        'email' => 'user1test@gmail.com',
+        'password' => bcrypt('password')
+    ]);
+
+    // make 5 failed attempts
+    for($i=0; $i<5; $i++){
+        $this->postJson('/api/login', [
+            'email' => 'user1test@gmail.com',
+            'password' => 'wrongpassword'
+        ]);
+    }
+
+    // on 6th attempt it should be rate limited
+    $response = $this->postJson('/api/login', [
+        'email' => 'user1test@gmail.com',
+        'password' => 'password'
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['email']);
 })->only();
