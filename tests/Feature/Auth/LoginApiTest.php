@@ -30,4 +30,21 @@ test('users can login with valid credentials via api.', function () {
 
     expect($response->json('token'))->not->toBeEmpty();
     $this->assertAuthenticated();
+});
+
+test('users cannot login with invalid credentials via api.', function () {
+    $user = User::factory()->create([
+        'email' => 'user1test@gmail.com',
+        'password' => bcrypt('password')
+    ]);
+
+    $response = $this->postJson('/api/login', [
+        'email' => 'rambahdurtest@gmail.com',
+        'password' => 'password'
+    ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['email']);
+
+    $this->assertGuest();
 })->only();
